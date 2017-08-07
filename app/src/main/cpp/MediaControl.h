@@ -26,6 +26,7 @@ protected:
 private:
     EvoMediaSource source;
     EvoVideoConvert convert;
+    AVCodecContext *codecContext;
     VideoDecoder *decoder;
     pthread_mutex_t lock;
     int64_t timestamp_now;

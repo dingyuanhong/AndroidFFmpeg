@@ -16,7 +16,8 @@ MediaControl::MediaControl()
     :bStop(false),bPause(false)
     ,timestamp_last(0),timestamp_now(0),
      time_last(0),thread(0),
-     decoder(NULL),frame_last(NULL)
+     decoder(NULL),frame_last(NULL),
+     codecContext(NULL)
 {
     pthread_mutex_init(&lock,NULL);
 }
@@ -27,6 +28,13 @@ MediaControl::~MediaControl()
     pthread_mutex_destroy(&lock);
 }
 
+#include <android/log.h>
+
+void PrintCodecContext(AVCodecContext * context)
+{
+    __android_log_print(ANDROID_LOG_INFO,"MediaControl","");
+}
+
 int MediaControl::Open(const char * file)
 {
     int ret = source.Open(file);
@@ -34,14 +42,44 @@ int MediaControl::Open(const char * file)
     {
         AVStream * stream = source.GetVideoStream();
         if(stream == NULL) return -1;
-        AVCodec *codec = (AVCodec*)stream->codec->codec;
-        if (codec == NULL) codec = avcodec_find_decoder(stream->codec->codec_id);
-        if(codec == NULL) return -1;
-        if (avcodec_open2(stream->codec, codec, NULL) < 0)
-        {
-            return -1;
+        bool newContext = true;
+        if (newContext) {
+            AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
+            if (!codec){
+                source.Close();
+                return -1;
+            }
+            codecContext = avcodec_alloc_context3(codec);
+//            uint8_t extData[64];
+//            int size = source.GetExtData(extData,64);
+//            codecContext->extradata = extData;
+//            codecContext->extradata_size = size;
+            //增加解码器数量用以加快解码速度
+            codecContext->thread_count = 5;
+            codecContext->active_thread_type = 1;
+            if (avcodec_open2(codecContext, codec, NULL) < 0)
+            {
+                avcodec_free_context(&codecContext);
+                codecContext = NULL;
+                source.Close();
+                return -1;
+            }
+            decoder = new VideoDecoder(codecContext);
         }
-        decoder = new VideoDecoder(stream->codec);
+        else {
+            AVCodec *codec = (AVCodec *) stream->codec->codec;
+            if (codec == NULL) codec = avcodec_find_decoder(stream->codec->codec_id);
+            if (codec == NULL) {
+                source.Close();
+                return -1;
+            }
+            if (avcodec_open2(stream->codec, codec, NULL) < 0)
+            {
+                source.Close();
+                return -1;
+            }
+            decoder = new VideoDecoder(stream->codec);
+        }
     }
     return ret;
 }
@@ -58,6 +96,12 @@ int MediaControl::Close()
     {
         delete decoder;
         decoder = NULL;
+    }
+    if(codecContext != NULL)
+    {
+        avcodec_close(codecContext);
+        avcodec_free_context(&codecContext);
+        codecContext = NULL;
     }
     source.Close();
     return 0;
