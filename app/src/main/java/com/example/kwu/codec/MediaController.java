@@ -24,9 +24,23 @@ public class MediaController
         super.finalize();
     }
 
+    public void YUVData(byte[] data)
+    {
+//        try {
+//            int width = 3040;
+//            int height = 1520;
+//            ByteBuffer y = ByteBuffer.wrap(data,0,width*height);
+//            ByteBuffer u = ByteBuffer.wrap(data,width*height,width*height/4);
+//            ByteBuffer v = ByteBuffer.wrap(data,width*height + width*height/4,width*height/4);
+//        }
+//        catch ( Exception e)
+//        {
+//        }
+    }
+
     private void logMessage(String msg)
     {
-        Log.d(TAG,"解码:" + msg);
+        Log.d(TAG,"解码:");
     }
 
     private native void construct();
@@ -36,4 +50,5 @@ public class MediaController
     public native int play();
     public native void pause();
     public native void seek(int millisecond);
+    public native static String errorString(int errno);
 }

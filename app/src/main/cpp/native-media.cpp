@@ -1,6 +1,7 @@
 #include "jni.h"
 #include "string"
 #include <assert.h>
+#include <android/log.h>
 
 static JavaVM* g_VM = NULL;
 
@@ -55,6 +56,7 @@ public:
         javaVM =vm;
         thiz = env->NewGlobalRef(object);
     }
+    
     void uninit(JNIEnv *env)
     {
         env->DeleteGlobalRef(thiz);
@@ -83,20 +85,38 @@ private:
     {
 //        Callback(timestamp,frame);
 //        YUVPacket(timestamp,frame);
+//        YUVData(timestamp,frame);
+        __android_log_print(ANDROID_LOG_INFO,"native media","SendPacket!");
+    }
+
+    void YUVData(int64_t timestamp,AVFrame *frame)
+    {
+        JNIEnv *env = env_;
+        if(env == NULL) return;
+        int width = 3040;
+        int height = 1520;
+        jbyteArray YUVData_ = env->NewByteArray(width*height*3/2);
+
+        jclass clazz = env->GetObjectClass(thiz);
+        jmethodID  jid = env->GetMethodID(clazz,"YUVData","(L[B)V");
+        env->CallVoidMethod(thiz,jid,YUVData_);
+        env->DeleteLocalRef(YUVData_);
     }
 
     void Callback(int64_t timestamp,AVFrame *frame)
     {
         JNIEnv *env = env_;
         if(env == NULL) return;
-        char buffer[64];
+        char buffer[64] = {0};
         sprintf(buffer,"%lld",timestamp);
         jstring msg_ = env->NewStringUTF(buffer);
         jclass clazz = env->GetObjectClass(thiz);
         jmethodID  jid = env->GetMethodID(clazz,"logMessage","(Ljava/lang/String;)V");
         env->CallVoidMethod(thiz,jid,msg_);
         env->DeleteLocalRef(msg_);
+        msg_ = NULL;
     }
+
     void YUVPacket(int64_t timestamp,AVFrame *frame)
     {
     }
@@ -166,3 +186,11 @@ Java_com_example_kwu_codec_MediaController_seek(JNIEnv *env, jobject thiz,jint s
     control->Seek(sec);
 }
 
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_kwu_codec_MediaController_errorString(JNIEnv *env, jclass thiz,jint errorno) {
+    char buf[255];
+    int ret = av_strerror(errorno,buf,255);
+    jstring sRet = env->NewStringUTF(buf);
+    return sRet;
+}
