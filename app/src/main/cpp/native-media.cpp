@@ -2,6 +2,7 @@
 #include "string"
 #include <assert.h>
 #include <android/log.h>
+#include "MediaControl.h"
 
 static JavaVM* g_VM = NULL;
 
@@ -15,6 +16,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
     }
     assert(env != NULL);
     g_VM = vm;
+#ifdef USE_NEW_API
+    av_jni_set_java_vm(g_VM,NULL);
+#endif
     return JNI_VERSION_1_4;
 }
 
@@ -33,8 +37,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
      T *object = (T *)env->GetLongField(thiz, fid); \
      if(object != NULL) delete object; \
      (*env).SetLongField(thiz, fid, (jlong)0);
-
-#include "MediaControl.h"
 
 class JNIMediaControl
         :public MediaControl
