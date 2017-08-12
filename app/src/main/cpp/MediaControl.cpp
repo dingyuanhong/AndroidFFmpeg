@@ -7,7 +7,7 @@
 #include <android/log.h>
 #endif
 
-int GetAnnexbLength(uint8_t * nalu, int nalu_size)
+inline int GetAnnexbLength(uint8_t * nalu, int nalu_size)
 {
     unsigned char ANNEXB_CODE_LOW[] = { 0x00,0x00,0x01 };
     unsigned char ANNEXB_CODE[] = { 0x00,0x00,0x00,0x01 };
