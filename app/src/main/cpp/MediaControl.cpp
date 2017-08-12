@@ -194,6 +194,8 @@ int MediaControl::Open(const char * file)
             ret = avcodec_open2(codecContext, codec, NULL);
 			if (ret != 0)
 			{
+                codecContext->extradata = NULL;
+                codecContext->extradata_size = 0;
 				avcodec_free_context(&codecContext);
 				codecContext = NULL;
 				source.Close();
