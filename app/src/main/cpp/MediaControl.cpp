@@ -7,6 +7,85 @@
 #include <android/log.h>
 #endif
 
+int GetAnnexbLength(uint8_t * nalu, int nalu_size)
+{
+    unsigned char ANNEXB_CODE_LOW[] = { 0x00,0x00,0x01 };
+    unsigned char ANNEXB_CODE[] = { 0x00,0x00,0x00,0x01 };
+
+    unsigned char *data = nalu;
+    int size = nalu_size;
+    if(data == NULL)
+    {
+        return 0;
+    }
+    if ((size > 3 && memcmp(data, ANNEXB_CODE_LOW,3) == 0))
+    {
+        return 3;
+    }
+    else if((size > 4 && memcmp(data, ANNEXB_CODE,4) == 0))
+    {
+        return 4;
+    }
+    return 0;
+}
+
+//MP4模式扩展数据
+inline uint8_t * MakeExtraData(uint8_t * sps, int sps_len, uint8_t * pps, int pps_len, int * out_len)
+{
+    int sps_header = GetAnnexbLength(sps,sps_len);
+    int pps_header = GetAnnexbLength(pps,pps_len);
+    sps += sps_header;
+    sps_len -= sps_header;
+    pps += pps_header;
+    pps_len -= pps_header;
+
+    int extraSize = 5 + 1 + 2 + sps_len + 1 + 2 + pps_len;
+    uint8_t * extraBuffer = (uint8_t*)av_malloc(extraSize);
+    memset(extraBuffer, 0, extraSize);
+    uint8_t * extra = extraBuffer;
+    extra[0] = 0x01;
+    extra[1] = sps[1];
+    extra[2] = sps[2];
+    extra[3] = sps[3];
+    extra[4] = 0xFF;
+    extra[5] = 0xE1;
+    extra[6] = sps_len >> 8;
+    extra[7] = sps_len & 0xFF;
+    memcpy(extra + 8, sps, sps_len);
+    extra += 8 + sps_len;
+    extra[0] = 0x01;
+    extra[1] = pps_len >> 8;
+    extra[2] = pps_len & 0xFF;
+    memcpy(extra + 3, pps, pps_len);
+
+    if (out_len != NULL) *out_len = extraSize;
+    return extraBuffer;
+}
+
+//标准H264扩展数据
+inline uint8_t * MakeH264ExtraData(uint8_t * sps, int sps_len, uint8_t * pps, int pps_len, int * out_len)
+{
+    int sps_header = GetAnnexbLength(sps,sps_len);
+    int pps_header = GetAnnexbLength(pps,pps_len);
+    sps += sps_header;
+    sps_len -= sps_header;
+    pps += pps_header;
+    pps_len -= pps_header;
+
+    int extraSize = 4 + sps_len + 4 + pps_len;
+    uint8_t * extraBuffer = (uint8_t*)av_malloc(extraSize);
+    memset(extraBuffer, 0, extraSize);
+    uint8_t * extra = extraBuffer;
+    extra[3] = 0x01;
+    memcpy(extra + 4, sps, sps_len);
+    extra += 4 + sps_len;
+    extra[3] = 0x01;
+    memcpy(extra + 4, pps, pps_len);
+
+    if (out_len != NULL) *out_len = extraSize;
+    return extraBuffer;
+}
+
 #ifdef _WIN32
 DWORD WINAPI MediaControl_Thread(void* param)
 #else
@@ -71,83 +150,6 @@ inline AVCodec *GetBestDecoder(AVCodecID id,enum AVMediaType type,std::string Na
         if (name.length() == 0) break;
     }
     return NULL;
-}
-
-
-int GetAnnexbLength(uint8_t * nalu, int nalu_size)
-{
-    unsigned char ANNEXB_CODE_LOW[] = { 0x00,0x00,0x01 };
-    unsigned char ANNEXB_CODE[] = { 0x00,0x00,0x00,0x01 };
-
-    unsigned char *data = nalu;
-    int size = nalu_size;
-    if(data == NULL)
-    {
-        return 0;
-    }
-    if ((size > 3 && memcmp(data, ANNEXB_CODE_LOW,3) == 0))
-    {
-        return 3;
-    }
-    else if((size > 4 && memcmp(data, ANNEXB_CODE,4) == 0))
-    {
-        return 4;
-    }
-    return 0;
-}
-inline uint8_t * MakeExtraData(uint8_t * sps, int sps_len, uint8_t * pps, int pps_len, int * out_len)
-{
-    int sps_header = GetAnnexbLength(sps,sps_len);
-    int pps_header = GetAnnexbLength(pps,pps_len);
-    sps += sps_header;
-    sps_len -= sps_header;
-    pps += pps_header;
-    pps_len -= pps_header;
-
-    int extraSize = 5 + 1 + 2 + sps_len + 1 + 2 + pps_len;
-    uint8_t * extraBuffer = (uint8_t*)av_malloc(extraSize);
-    memset(extraBuffer, 0, extraSize);
-    uint8_t * extra = extraBuffer;
-    extra[0] = 0x01;
-    extra[1] = sps[1];
-    extra[2] = sps[2];
-    extra[3] = sps[3];
-    extra[4] = 0xFF;
-    extra[5] = 0xE1;
-    extra[6] = sps_len >> 8;
-    extra[7] = sps_len & 0xFF;
-    memcpy(extra + 8, sps, sps_len);
-    extra += 8 + sps_len;
-    extra[0] = 0x01;
-    extra[1] = pps_len >> 8;
-    extra[2] = pps_len & 0xFF;
-    memcpy(extra + 3, pps, pps_len);
-
-    if (out_len != NULL) *out_len = extraSize;
-    return extraBuffer;
-}
-
-inline uint8_t * MakeH264ExtraData(uint8_t * sps, int sps_len, uint8_t * pps, int pps_len, int * out_len)
-{
-    int sps_header = GetAnnexbLength(sps,sps_len);
-    int pps_header = GetAnnexbLength(pps,pps_len);
-    sps += sps_header;
-    sps_len -= sps_header;
-    pps += pps_header;
-    pps_len -= pps_header;
-
-    int extraSize = 4 + sps_len + 4 + pps_len;
-    uint8_t * extraBuffer = (uint8_t*)av_malloc(extraSize);
-    memset(extraBuffer, 0, extraSize);
-    uint8_t * extra = extraBuffer;
-    extra[3] = 0x01;
-    memcpy(extra + 4, sps, sps_len);
-    extra += 4 + sps_len;
-    extra[3] = 0x01;
-    memcpy(extra + 4, pps, pps_len);
-
-    if (out_len != NULL) *out_len = extraSize;
-    return extraBuffer;
 }
 
 int MediaControl::Open(const char * file)
