@@ -20,107 +20,22 @@ add_library( native-lib SHARED
              src/main/cpp/native-lib.cpp
               )
 
-add_library( ijkffmpeg SHARED IMPORTED )
-set_target_properties( ijkffmpeg
+add_library( libevoffmpeg SHARED IMPORTED )
+set_target_properties( libevoffmpeg
              PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libijkffmpeg.so
-             )
-
-add_library( avcodec-56 SHARED IMPORTED )
-set_target_properties( avcodec-56
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavcodec-56.so
-             )
-
-add_library( avformat-56 SHARED IMPORTED )
-set_target_properties( avformat-56
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavformat-56.so
-             )
-
-add_library( avutil-54 SHARED IMPORTED )
-set_target_properties( avutil-54
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavutil-54.so
-             )
-
-add_library( swresample-1 SHARED IMPORTED )
-set_target_properties( swresample-1
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libswresample-1.so
-             )
-
-add_library( swscale-3 SHARED IMPORTED )
-set_target_properties( swscale-3
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libswscale-3.so
-             )
-
-add_library( libijkffmpeg SHARED IMPORTED )
-set_target_properties( libijkffmpeg
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libijkffmpeg.so
-             )
-
-add_library( libavcodec SHARED IMPORTED )
-set_target_properties( libavcodec
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavcodec.so
-             )
-
-add_library( libavformat SHARED IMPORTED )
-set_target_properties( libavformat
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavformat.so
-             )
-
-add_library( libavutil SHARED IMPORTED )
-set_target_properties( libavutil
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavutil.so
-             )
-
-add_library( libavresample SHARED IMPORTED )
-set_target_properties( libavresample
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavresample.so
-             )
-
-add_library( libswresample SHARED IMPORTED )
-set_target_properties( libswresample
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libswresample.so
-             )
-
-add_library( libswscale SHARED IMPORTED )
-set_target_properties( libswscale
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libswscale.so
-             )
-
-add_library( libavfilter SHARED IMPORTED )
-set_target_properties( libavfilter
-             PROPERTIES
-             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libavfilter.so
+             IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/libs/${ANDROID_ABI}/libevoffmpeg.so
              )
 
 find_library( log-lib log )
 
-#include_directories(${CMAKE_SOURCE_DIR}/libs/include)
-include_directories(${CMAKE_SOURCE_DIR}/libs/includeSelf)
+include_directories(${CMAKE_SOURCE_DIR}/libs/include)
 
 target_link_libraries( native-lib
-                       libavformat
-                       libavcodec
-                       libavutil
-                       libswresample
-                       libswscale
-                       libavfilter
+                       libevoffmpeg
 
                        # included in the NDK.
                        ${log-lib}
                        )
-
 
 #libavformat
 #libavcodec
