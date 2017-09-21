@@ -86,6 +86,16 @@ inline uint8_t * MakeH264ExtraData(uint8_t * sps, int sps_len, uint8_t * pps, in
     return extraBuffer;
 }
 
+void log_callback(void* avcl, int level, const char* fmt, va_list vl)
+{
+    char tmp[65535] ;
+    vsprintf(tmp,fmt,vl);
+    if(AV_LOG_ERROR == level)
+    {
+        char * strError = (char*)tmp;
+    }
+}
+
 #ifdef _WIN32
 DWORD WINAPI MediaControl_Thread(void* param)
 #else
@@ -154,10 +164,11 @@ inline AVCodec *GetBestDecoder(AVCodecID id,enum AVMediaType type,std::string Na
 
 int MediaControl::Open(const char * file)
 {
+    av_log_set_callback(log_callback);
     int ret = source.Open(file);
     if(ret == 0)
     {
-		bool newContext = true;
+		bool newContext = false;
 		if (newContext) {
             AVCodec *codec = GetBestDecoder(AV_CODEC_ID_H264,AVMEDIA_TYPE_VIDEO,"h264_mediacodec");//h264_mediacodec
             if (codec == NULL) codec = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -173,7 +184,8 @@ int MediaControl::Open(const char * file)
             uint8_t pps[128];
             int pps_size = source.GetPPS(pps,128);
             int out_size = 0;
-            uint8_t *  extraData = MakeExtraData(sps,sps_size,pps,pps_size,&out_size);
+            uint8_t *  extraData = MakeH264ExtraData(sps,sps_size,pps,pps_size,&out_size);
+//            uint8_t *  extraData = MakeExtraData(sps,sps_size,pps,pps_size,&out_size);
 
 			codecContext->extradata = extraData;
 			codecContext->extradata_size = out_size;
@@ -232,7 +244,7 @@ int MediaControl::Open(const char * file)
         info.Height = 0;
         info.Format = AV_PIX_FMT_NONE;
         EvoVideoInfo oInfo = info;
-        oInfo.Format = AV_PIX_FMT_YUV420P;
+        oInfo.Format = AV_PIX_FMT_NV12;
         convert.Initialize(info,oInfo);
         decoder->Attach(&convert);
     }

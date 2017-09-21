@@ -87,7 +87,7 @@ private:
     {
 //        Callback(timestamp,frame);
 //        YUVPacket(timestamp,frame);
-//        YUVData(timestamp,frame);
+        YUVData(timestamp,frame);
         __android_log_print(ANDROID_LOG_INFO,"native media","SendPacket!");
     }
 
@@ -95,13 +95,17 @@ private:
     {
         JNIEnv *env = env_;
         if(env == NULL) return;
-        int width = 3040;
-        int height = 1520;
-        jbyteArray YUVData_ = env->NewByteArray(width*height*3/2);
-
+        int width = frame->width;
+        int height = frame->height;
+        __android_log_print(ANDROID_LOG_INFO,"native media","YUV:%d %d" , width , height);
+        int length = width*height*3/2;
+        jbyteArray YUVData_ = env->NewByteArray(length);
+        jbyte * bytes = env->GetByteArrayElements(YUVData_,0);
+        memcpy(bytes,frame->data[0],length);
         jclass clazz = env->GetObjectClass(thiz);
-        jmethodID  jid = env->GetMethodID(clazz,"YUVData","(L[B)V");
+        jmethodID  jid = env->GetMethodID(clazz,"YUVData","([B)V");
         env->CallVoidMethod(thiz,jid,YUVData_);
+        env->ReleaseByteArrayElements(YUVData_,bytes,0);
         env->DeleteLocalRef(YUVData_);
     }
 

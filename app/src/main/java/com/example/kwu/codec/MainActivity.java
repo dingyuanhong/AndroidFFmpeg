@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
         bt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-//                path += "/UVCResource/video.h264";
-                path += "/UVCResource/output.mp4";
+                path += "/UVCResource/video.h264";
+//                path += "/UVCResource/Vid0616000023.mp4";
                 mediaController.close();
                 int ret = mediaController.open(path);
                 if(ret != 0) tv.setText("打开文件错误:" + MediaController.errorString(ret));
