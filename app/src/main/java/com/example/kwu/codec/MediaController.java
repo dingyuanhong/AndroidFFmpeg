@@ -3,8 +3,10 @@ package com.example.kwu.codec;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,7 +19,7 @@ public class MediaController
     extends JNIObject
 {
     private String TAG = "MediaController";
-    private File defaultDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/UVCResource/temp_frame_write");
+    public static File defaultDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/UVCResource");
     private int index  = 0;
     public MediaController()
     {
@@ -32,40 +34,9 @@ public class MediaController
         super.finalize();
     }
 
-    private void writeFrame(String name,byte[] bytes)
-    {
-        File frame = new File(defaultDir,"/" + name);
-        writeFrame(frame,bytes);
-    }
-
-    private void writeFrame(File frame,byte[] bytes) {
-        FileOutputStream outputStream = null;
-        BufferedOutputStream boStream = null;
-        try {
-            outputStream = new FileOutputStream(frame);
-            boStream = new BufferedOutputStream(outputStream);
-            boStream.write(bytes);
-            Log.d("MediaController","写文件完成.");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (null != boStream) {
-                try {
-                    boStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (null != outputStream) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    private void writeFrame(String name,byte[] bytes) {
+        File frame = new File(defaultDir, "/temp_frame_write/" + name);
+        writeFrame(frame, bytes);
     }
 
     public void YUVData(byte[] data)
@@ -100,4 +71,69 @@ public class MediaController
     public native void pause();
     public native void seek(int millisecond);
     public native static String errorString(int errno);
+
+    public static void writeFrame(File frame,byte[] bytes) {
+        FileOutputStream outputStream = null;
+        BufferedOutputStream boStream = null;
+        try {
+            outputStream = new FileOutputStream(frame);
+            boStream = new BufferedOutputStream(outputStream);
+            boStream.write(bytes);
+            Log.d("MediaController","写文件完成.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (null != boStream) {
+                try {
+                    boStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (null != outputStream) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static byte [] readFrame(File frame) {
+        FileInputStream inputStream = null;
+        BufferedInputStream boStream = null;
+        byte [] bytes = null;
+        try {
+            inputStream = new FileInputStream(frame);
+            boStream = new BufferedInputStream(inputStream);
+            //文件长度
+            int length = boStream.available();
+            bytes = new byte[length];
+            boStream.read(bytes);
+            Log.d("MediaController","写文件完成.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (null != boStream) {
+                try {
+                    boStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (null != inputStream) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return bytes;
+    }
 }

@@ -244,6 +244,8 @@ int MediaControl::Open(const char * file)
         info.Height = 0;
         info.Format = AV_PIX_FMT_NONE;
         EvoVideoInfo oInfo = info;
+//        oInfo.Width = 1000;
+//        oInfo.Height = 1000;
         oInfo.Format = AV_PIX_FMT_NV12;
         convert.Initialize(info,oInfo);
         decoder->Attach(&convert);

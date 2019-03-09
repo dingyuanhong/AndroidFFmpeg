@@ -16,8 +16,10 @@ add_library( native-lib SHARED
              src/main/cpp/EvoInterface/EvoVideoConvert.cpp
              src/main/cpp/EvoInterface/AudioDecoder.cpp
              src/main/cpp/MediaControl.cpp
+             src/main/cpp/native-jniload.cpp
              src/main/cpp/native-media.cpp
              src/main/cpp/native-lib.cpp
+             src/main/cpp/native-VideoContert.cpp
               )
 
 add_library( libevoffmpeg SHARED IMPORTED )

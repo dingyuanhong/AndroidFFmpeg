@@ -13,6 +13,10 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.File;
+import java.nio.Buffer;
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     // Used to load the 'native-lib' library on application startup.
@@ -57,6 +61,36 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        bt = (Button) findViewById(R.id.button_convert);
+        bt.setOnClickListener(new View.OnClickListener() {
+              public void onClick(View v) {
+                  VideoInfo src = new VideoInfo();
+                  src.Width = 3040;
+                  src.Height = 1520;
+                  src.Format = 25;
+
+                  VideoInfo des = new VideoInfo();
+                  des.Width = 1000;
+                  des.Height = 1000;
+                  des.Format = 25;
+                  VideoConvert convert = new VideoConvert();
+                  int ret = convert.Init(src,des);
+                  if(ret != 1) return;
+                  String name = "0_frame.txt";
+                  File frame = new File(MediaController.defaultDir, "/" + name);
+                  byte[] data = MediaController.readFrame(frame);
+                  byte[] baRet = convert.Convert(data,data.length);
+                  if(baRet != null)
+                  {
+                      name = "output.yuv";
+                      frame = new File(MediaController.defaultDir, "/" + name);
+                      MediaController.writeFrame(frame,baRet);
+                      tv.setText("转换成功");
+                  }else{
+                      tv.setText("转换失败");
+                  }
+              }
+        });
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -68,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
 
+    public native void brokenFromJNI();
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.

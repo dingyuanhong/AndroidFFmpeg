@@ -25,4 +25,13 @@
         android:layout_alignParentStart="true"
         android:layout_marginTop="16dp"
         android:id="@+id/button_test" />
+    <Button
+        android:text="Convert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_test"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="16dp"
+        android:id="@+id/button_convert" />
 </RelativeLayout>

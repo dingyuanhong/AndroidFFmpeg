@@ -1,42 +1,7 @@
-#include "jni.h"
+#include "native-jniload.h"
 #include "string"
 #include <assert.h>
-#include <android/log.h>
 #include "MediaControl.h"
-
-static JavaVM* g_VM = NULL;
-
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    JNIEnv* env = NULL;
-    jint result = -1;
-
-    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-        return -1;
-    }
-    assert(env != NULL);
-    g_VM = vm;
-#ifdef USE_NEW_API
-    av_jni_set_java_vm(g_VM,NULL);
-#endif
-    return JNI_VERSION_1_4;
-}
-
-#define  CONSTRUCT(T) { T *t = new T(); \
-    jclass clazz = (jclass)(*env).GetObjectClass(thiz); \
-    jfieldID fid = (jfieldID)(*env).GetFieldID(clazz, "mObj", "J"); \
-    jlong jstr = (jlong) (*env).GetLongField(thiz, fid);  \
-    (*env).SetLongField(thiz, fid, (jlong)t);}
-
-#define OBJECT(T,name) jclass clazz = (jclass)env->GetObjectClass(thiz); \
-     jfieldID fid = env->GetFieldID(clazz, "mObj","J");  \
-     T *name = (T *)env->GetLongField(thiz, fid);
-
-#define DESTRUCT(T)  jclass clazz = (jclass)env->GetObjectClass(thiz); \
-     jfieldID fid = env->GetFieldID(clazz, "mObj","J");  \
-     T *object = (T *)env->GetLongField(thiz, fid); \
-     if(object != NULL) delete object; \
-     (*env).SetLongField(thiz, fid, (jlong)0);
 
 class JNIMediaControl
         :public MediaControl
@@ -101,6 +66,12 @@ private:
         int length = width*height*3/2;
         jbyteArray YUVData_ = env->NewByteArray(length);
         jbyte * bytes = env->GetByteArrayElements(YUVData_,0);
+        if(bytes == nullptr)
+        {
+            __android_log_print(ANDROID_LOG_ERROR,"native media","YUVData Error!");
+            env->DeleteLocalRef(YUVData_);
+            return;
+        }
         memcpy(bytes,frame->data[0],length);
         jclass clazz = env->GetObjectClass(thiz);
         jmethodID  jid = env->GetMethodID(clazz,"YUVData","([B)V");
@@ -139,7 +110,7 @@ Java_com_example_kwu_codec_MediaController_construct(JNIEnv* env, jobject thiz){
     CONSTRUCT(JNIMediaControl);
     OBJECT(JNIMediaControl,control);
     if(control == NULL) return ;
-    control->init(g_VM,env,thiz);
+    control->init(GetVM(),env,thiz);
 }
 
 extern "C"
